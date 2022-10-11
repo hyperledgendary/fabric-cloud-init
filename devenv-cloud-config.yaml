@@ -1,0 +1,83 @@
+#cloud-config
+
+groups:
+  - docker
+
+system_info:
+  default_user:
+    groups: [docker]
+
+# TODO: add kubectl source
+apt:
+  sources:
+    docker.list:
+      source: deb https://download.docker.com/linux/ubuntu $RELEASE stable
+      keyid: 9DC858229FC7DD38854AE2D88D81803C0EBFCD88
+
+pacakge_update: true
+package_upgrade: true
+
+# TODO: install kubectl
+packages:
+  - jq
+  - curl
+  - software-properties-common
+  - apt-transport-https
+  - ca-certificates
+  - gnupg-agent
+  - software-properties-common
+  - docker-ce
+  - docker-ce-cli
+  - containerd.io
+  - make
+  - gcc
+
+write_files:
+- path: /etc/profile
+  content: |
+    export PATH=$PATH:/usr/local/go/bin
+  append: true
+- path: /etc/nsswitch.conf
+  content: |
+    hosts: files dns
+- path: /usr/local/bin/setup-fabric.sh
+  permissions: '0755'
+  content: |
+    #!/usr/bin/env sh
+
+    # Hacky script to setup Fabric without needing to rely on published
+    # binaries, since those don't exist for arm machines.
+    #
+    # TODO:
+    # - download setup script from git instead of embedding it in yaml
+    # - add arguments for fabric version
+    # - make it less hacky!
+
+    export PATH=$PATH:/usr/local/go/bin
+
+    git clone --depth 1 --branch main https://github.com/hyperledger/fabric-samples.git
+    mkdir -p fabric-samples/config
+
+    mkdir -p /usr/local/go/src/github.com/hyperledger
+    git clone --depth 1 --branch release-2.4 https://github.com/hyperledger/fabric.git /usr/local/go/src/github.com/hyperledger/fabric
+
+    cd /usr/local/go/src/github.com/hyperledger/fabric
+    CGO_ENABLED=0 make orderer
+    CGO_ENABLED=0 make configtxgen
+    CGO_ENABLED=0 make configtxlator
+    CGO_ENABLED=0 make cryptogen
+    CGO_ENABLED=0 make discover
+    CGO_ENABLED=0 make ledgerutil
+    CGO_ENABLED=0 make osnadmin
+    CGO_ENABLED=0 make peer
+    cd -
+
+    cp /usr/local/go/src/github.com/hyperledger/fabric/sampleconfig/core.yaml fabric-samples/config
+    chown -R ubuntu:ubuntu fabric-samples
+
+# TODO: install yq, kind, k9s, just, etc.
+runcmd:
+  - pwd
+  - wget -P /tmp/ https://go.dev/dl/go1.18.7.linux-arm64.tar.gz
+  - tar -C /usr/local -xzf /tmp/go1.18.7.linux-arm64.tar.gz
+  - rm /tmp/go1.18.7.linux-arm64.tar.gz
