@@ -7,17 +7,51 @@ system_info:
   default_user:
     groups: [docker]
 
-# TODO: add kubectl source
 apt:
   sources:
     docker.list:
       source: deb https://download.docker.com/linux/ubuntu $RELEASE stable
       keyid: 9DC858229FC7DD38854AE2D88D81803C0EBFCD88
+    kubernetes.list:
+      source: deb https://apt.kubernetes.io/ kubernetes-xenial main
+      keyid: 7F92E05B31093BEF5A3C2D38FEEA9169307EA071
+
+    # prebuilt-mpr should have "just" but doesn't seem to include arm :(
+    # prebuilt.list:
+    #   source: deb https://proget.makedeb.org prebuilt-mpr $RELEASE
+    #   key: |
+    #     -----BEGIN PGP PUBLIC KEY BLOCK-----
+    #     Version: BCPG C# v1.8.1.0
+
+    #     mQINBGJslcEBEACWT0Kphz3bmIO7s3BRW8Rw2m36YI0lDQmdkZy9F6Aa8+Ov9b6+
+    #     44hAvPYfm0fjOiGxq264v9Av5/26vcrDYsPKupaQs6EjT0NjcZ2A47KLpeJGzbzt
+    #     74KP+YyKm/oqW8Md8jb8GBRq0dnFoLOOA6bvHzP7TzANAKFIEZQ0m4GO/AI6Y9ap
+    #     09Q+gZramLl9OCoKRhnmC7QiJO9PSLLvBJOWk3pORpMU5GK5df2RYgpC6d0laFe4
+    #     KmmqcmuU7PgGAJ9C0Fy9i4WEEPdIrJ1Sg0PNnCloLGxFYg1he3gkF2GnTHAU05Ih
+    #     yc1anMv4MDh5m3+Em3laEnR16lMPPi/veLvdyGJ61f1I8cih391afvHloN2J3Z+j
+    #     0sZN7BZthIWkoqhd6DnZ+XGwJoM3lAsPaH3uHsNtquWIqEOO0UBndIOmrcVd5QyY
+    #     1tAJBQHl9XDRirIfsbFxESevANTkc6DCe7VPLADK/nTqwVrrruOZAIXrEwnoWTFj
+    #     xxl7lW+zswiVJWcpYIMQClCAgdq0g7bLs3UvPn4cUYYLTXRp+3LDps7hwmmoEYCD
+    #     bsp4exVPS9Whzu2/6ojR4pwJcXdvXsnPsqcQGwwd/pNaJrjC/BmWbQBZaBspfj2X
+    #     AtnhObFJkB49UWr+cFBIcoJAUEL16WyAf/o/1K8n1299Cc1QeUgBg1F41wARAQAB
+    #     tBNjb250YWN0QG1ha2VkZWIub3JniQIlBBMBAgAPApsDBYJibJXBBYkAAAAAAAoJ
+    #     EE/p8sQ9lCig3esQAIXM6ib4PJqKbAd5enhPBkAquZzLIsdaNg3f5dqan5BptIGM
+    #     8EOS82Urlw7PACLlqf8lkM+0riU1SXGuEig+TFHHeYE9xYL9JguLnT+Iumfe/0YM
+    #     y/26VNadQJv581eJUnRfOBdhUFsCwksLE28qq8SKDq9a8n719TgPngTZNaD0zCNB
+    #     Tk90cwa7oRfUQza9IMn/7AvjvkpuwpsyZeSMj4RNL+1PaqgSgF1W94YWbXGO0e+g
+    #     fyp+r8WH0rYEUbl51FxGw5vXV9hGKe2Xbo40TAIv//l//8LeluA3P4nzPnr1pGaq
+    #     iqsIsVTfluC8OC0uEFTnsMCiyEUnP7LlCJc5dZeA+JfSuiwUI117cZ5TQr8uRY9L
+    #     zHiwKJkkrg2XNxwjQ20BZASd4HOHW8NcD/MULUL3d+pQ+lzbqcHLqT69YJdfVnPa
+    #     PEAsjHEauDbwgHyhy2pa2l43GcvecxlZTIXgKH+gGO+G2vC3vMFVcPLN0JWbHEkD
+    #     Tyiht2rMcIaEGXqzigc/S9czkOzsUuFdlWlBslBxJ6/yJYj5kvpSyGRJIe0dKZMp
+    #     yYDQQmO0+OuA75BUveDK9v9msA25NX8Ynus7tNh1LdlSnaJv6JYEIEhWDVBEkPmQ
+    #     TKGNsT2a5xrLry8pS3XJYThitIc8G7/ngzVOejsZ94G4OmYuCQxK97Hf/aHu
+    #     =Vi1D
+    #     -----END PGP PUBLIC KEY BLOCK-----
 
 package_update: true
 package_upgrade: true
 
-# TODO: install kubectl
 packages:
   - jq
   - curl
@@ -31,16 +65,18 @@ packages:
   - containerd.io
   - make
   - gcc
+  - tzdata
+  - kubectl
 
 write_files:
 - path: /etc/profile
   content: |
-    export PATH=$PATH:/usr/local/go/bin
+    export PATH=$PATH:$HOME/go/bin:/usr/local/go/bin
   append: true
 - path: /etc/nsswitch.conf
   content: |
     hosts: files dns
-- path: /usr/local/bin/setup-fabric.sh
+- path: /usr/local/bin/setup-fabric
   permissions: '0755'
   content: |
     #!/usr/bin/env sh
@@ -49,35 +85,29 @@ write_files:
     # binaries, since those don't exist for arm machines.
     #
     # TODO:
-    # - download setup script from git instead of embedding it in yaml
-    # - add arguments for fabric version
-    # - make it less hacky!
+    # - download setup script from git instead of embedding it in yaml?
+    # - add arguments for fabric version?
+    # - make it less hacky?!
 
-    export PATH=$PATH:/usr/local/go/bin
+    mkdir -p $HOME/go/src/github.com/hyperledger
+    git clone --depth 1 --branch release-2.4 https://github.com/hyperledger/fabric.git $HOME/go/src/github.com/hyperledger/fabric
 
-    git clone --depth 1 --branch main https://github.com/hyperledger/fabric-samples.git
-    mkdir -p fabric-samples/config
-
-    mkdir -p /usr/local/go/src/github.com/hyperledger
-    git clone --depth 1 --branch release-2.4 https://github.com/hyperledger/fabric.git /usr/local/go/src/github.com/hyperledger/fabric
-
-    cd /usr/local/go/src/github.com/hyperledger/fabric
+    cd $HOME/go/src/github.com/hyperledger/fabric
     CGO_ENABLED=0 make orderer
-    CGO_ENABLED=0 make configtxgen
-    CGO_ENABLED=0 make configtxlator
-    CGO_ENABLED=0 make cryptogen
-    CGO_ENABLED=0 make discover
-    CGO_ENABLED=0 make ledgerutil
-    CGO_ENABLED=0 make osnadmin
-    CGO_ENABLED=0 make peer
+    CGO_ENABLED=0 make tools
     cd -
 
-    cp /usr/local/go/src/github.com/hyperledger/fabric/sampleconfig/core.yaml fabric-samples/config
-    chown -R ubuntu:ubuntu fabric-samples
+    mkdir -p $HOME/go/bin
+    cp $HOME/go/src/github.com/hyperledger/fabric/build/bin/* $HOME/go/bin
 
-# TODO: install yq, kind, k9s, just, etc.
+    git clone --depth 1 --branch main https://github.com/hyperledger/fabric-samples.git $HOME/fabric-samples
+    mkdir -p $HOME/fabric-samples/config
+    cp $HOME/go/src/github.com/hyperledger/fabric/sampleconfig/core.yaml $HOME/fabric-samples/config
+
+# TODO: install yq, just, kind, k9s, etc.
 runcmd:
   - pwd
   - wget -P /tmp/ https://go.dev/dl/go1.18.7.linux-arm64.tar.gz
   - tar -C /usr/local -xzf /tmp/go1.18.7.linux-arm64.tar.gz
   - rm /tmp/go1.18.7.linux-arm64.tar.gz
+  - GOPATH=/usr/local/go HOME=/root /usr/local/go/bin/go install sigs.k8s.io/kind@v0.16.0

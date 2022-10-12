@@ -22,7 +22,7 @@ multipass shell fabric-dev
 And then...
 
 ```shell
-sudo setup-fabric.sh
+sudo setup-fabric
 ```
 
 ## Work in progress
@@ -63,4 +63,3 @@ Cannot use `make release` because Fabric Makefile doesn't include arm in release
 ```
 RELEASE_PLATFORMS = darwin-amd64 linux-amd64 windows-amd64 linux-arm64
 ```
-
