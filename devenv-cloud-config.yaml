@@ -95,6 +95,7 @@ write_files:
     cd "$HOME/go/src/github.com/hyperledger/fabric"
     CGO_ENABLED=0 make orderer
     CGO_ENABLED=0 make tools
+    CGO_ENABLED=0 make ccaasbuilder
     cd -
 
     mkdir -p "$HOME/go/bin"
@@ -103,6 +104,15 @@ write_files:
     git clone --depth 1 --branch main https://github.com/hyperledger/fabric-samples.git "$HOME/fabric-samples"
     mkdir -p "$HOME/fabric-samples/config"
     cp "$HOME/go/src/github.com/hyperledger/fabric/sampleconfig/"*.yaml "$HOME/fabric-samples/config"
+
+    mkdir -p "$HOME/fabric-builders"
+    ln -s "$HOME/go/src/github.com/hyperledger/fabric/release/linux-arm64/builders/ccaas" "$HOME/fabric-builders/ccaas"
+
+    mkdir -p "$HOME/fabric-builders/k8s/bin"
+    wget -qO- https://github.com/hyperledger-labs/fabric-builder-k8s/releases/download/v0.8.0/fabric-builder-k8s-v0.8.0-$(go env GOOS)-$(go env GOARCH).tgz | tar -C "$HOME/fabric-builders/k8s/bin" -xzf -
+
+    # TODO: just replace the external builders completely?
+    yq e 'del(.vm.endpoint) | (.chaincode.externalBuilders[] | select(.name == "ccaas_builder") | .path) = ("${HOME}/fabric-builders/ccaas" | envsubst(ne)) | .chaincode.externalBuilders += { "name": "k8s_builder", "path": "${HOME}/fabric-builders/k8s" | envsubst(ne), "propagateEnvironment": [ "CORE_PEER_ID", "KUBECONFIG_PATH" ] }' -i "$HOME/fabric-samples/config/core.yaml"
 
 runcmd:
   - wget -P /tmp/ https://go.dev/dl/go1.18.7.linux-arm64.tar.gz
