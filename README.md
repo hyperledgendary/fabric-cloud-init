@@ -69,3 +69,21 @@ What's up with Go? It keeps complaining that `warning: GOPATH set to GOROOT (/us
 ```
 GOMODCACHE=/usr/local/go/pkg/mod GOCACHE=/root/.cache/go-build
 ```
+
+```
+curl -fsSL \
+  https://github.com/hyperledgendary/conga-nft-contract/releases/download/v0.1.3/conga-nft-contract-v0.1.3.tgz \
+  -o conga-nft.tgz
+```
+
+OR ccaas package TBC
+
+
+peer lifecycle chaincode install conga-nft.tgz
+export PACKAGE_ID=$(peer lifecycle chaincode calculatepackageid conga-nft.tgz) && echo $PACKAGE_ID
+
+peer lifecycle chaincode approveformyorg -o 127.0.0.1:6050 --channelID mychannel --name sample-contract --version 1 --package-id $PACKAGE_ID --sequence 1 --tls --cafile ${PWD}/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/ca.crt
+
+peer lifecycle chaincode commit -o 127.0.0.1:6050 --channelID mychannel --name sample-contract --version 1 --sequence 1 --tls --cafile "${PWD}"/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/ca.crt
+
+peer chaincode query -C mychannel -n sample-contract -c '{"Args":["org.hyperledger.fabric:GetMetadata"]}'
