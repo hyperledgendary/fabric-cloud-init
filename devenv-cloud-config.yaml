@@ -89,25 +89,28 @@ write_files:
     # - add arguments for fabric version?
     # - make it less hacky?!
 
-    mkdir -p $HOME/go/src/github.com/hyperledger
-    git clone --depth 1 --branch release-2.4 https://github.com/hyperledger/fabric.git $HOME/go/src/github.com/hyperledger/fabric
+    mkdir -p "$HOME/go/src/github.com/hyperledger"
+    git clone --depth 1 --branch release-2.4 https://github.com/hyperledger/fabric.git "$HOME/go/src/github.com/hyperledger/fabric"
 
-    cd $HOME/go/src/github.com/hyperledger/fabric
+    cd "$HOME/go/src/github.com/hyperledger/fabric"
     CGO_ENABLED=0 make orderer
     CGO_ENABLED=0 make tools
     cd -
 
-    mkdir -p $HOME/go/bin
-    cp $HOME/go/src/github.com/hyperledger/fabric/build/bin/* $HOME/go/bin
+    mkdir -p "$HOME/go/bin"
+    cp "$HOME/go/src/github.com/hyperledger/fabric/build/bin/"* "$HOME/go/bin"
 
-    git clone --depth 1 --branch main https://github.com/hyperledger/fabric-samples.git $HOME/fabric-samples
-    mkdir -p $HOME/fabric-samples/config
-    cp $HOME/go/src/github.com/hyperledger/fabric/sampleconfig/core.yaml $HOME/fabric-samples/config
+    git clone --depth 1 --branch main https://github.com/hyperledger/fabric-samples.git "$HOME/fabric-samples"
+    mkdir -p "$HOME/fabric-samples/config"
+    cp "$HOME/go/src/github.com/hyperledger/fabric/sampleconfig/core.yaml" "$HOME/fabric-samples/config"
 
-# TODO: install yq, just, kind, k9s, etc.
 runcmd:
-  - pwd
   - wget -P /tmp/ https://go.dev/dl/go1.18.7.linux-arm64.tar.gz
   - tar -C /usr/local -xzf /tmp/go1.18.7.linux-arm64.tar.gz
   - rm /tmp/go1.18.7.linux-arm64.tar.gz
   - GOPATH=/usr/local/go HOME=/root /usr/local/go/bin/go install sigs.k8s.io/kind@v0.16.0
+  # Note: Cannot install later version of k9s this way due to https://github.com/derailed/k9s/issues/1484
+  - GOPATH=/usr/local/go HOME=/root /usr/local/go/bin/go install github.com/derailed/k9s@v0.25.2
+  - GOPATH=/usr/local/go HOME=/root /usr/local/go/bin/go install github.com/mikefarah/yq/v4@v4.28.1
+  - curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin
+  - su -c "wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash" ubuntu

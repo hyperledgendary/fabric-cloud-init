@@ -63,3 +63,9 @@ Cannot use `make release` because Fabric Makefile doesn't include arm in release
 ```
 RELEASE_PLATFORMS = darwin-amd64 linux-amd64 windows-amd64 linux-arm64
 ```
+
+What's up with Go? It keeps complaining that `warning: GOPATH set to GOROOT (/usr/local/go) has no effect` which doesn't appear to be true! At least I've not found another way to get the binaries installed in the right place yet!
+
+```
+GOMODCACHE=/usr/local/go/pkg/mod GOCACHE=/root/.cache/go-build
+```
