@@ -205,7 +205,8 @@ write_files:
     # TODO: just replace the external builders completely?
     yq e 'del(.vm.endpoint) | (.chaincode.externalBuilders[] | select(.name == "ccaas_builder") | .path) = ("${HOME}/fabric-builders/ccaas" | envsubst(ne)) | .chaincode.externalBuilders += { "name": "k8s_builder", "path": "${HOME}/fabric-builders/k8s" | envsubst(ne), "propagateEnvironment": [ "CORE_PEER_ID", "KUBECONFIG_PATH" ] }' -i "$HOME/fabric-samples/config/core.yaml"
 
-    wget -qO- https://raw.githubusercontent.com/hyperledgendary/package-k8s-chaincode-action/main/pkgk8scc.sh > /usr/local/bin/pkgk8scc && chmod 0755 /usr/local/bin/pkgk8scc
+    # TODO don't have permission to do this! Move to write-file or use a home bin directory?
+    # wget -qO- https://raw.githubusercontent.com/hyperledgendary/package-k8s-chaincode-action/main/pkgk8scc.sh > /usr/local/bin/pkgk8scc && chmod 0755 /usr/local/bin/pkgk8scc
 
 runcmd:
   - wget -P /tmp/ https://go.dev/dl/go1.18.7.linux-arm64.tar.gz

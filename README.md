@@ -192,17 +192,6 @@ GOMODCACHE=/usr/local/go/pkg/mod GOCACHE=/root/.cache/go-build
 ```
 
 
-CCAAS...
-
-
-peer lifecycle chaincode install conga-nft.tgz
-export PACKAGE_ID=$(peer lifecycle chaincode calculatepackageid conga-nft.tgz) && echo $PACKAGE_ID
-
-peer lifecycle chaincode approveformyorg -o 127.0.0.1:6050 --channelID mychannel --name sample-contract --version 1 --package-id $PACKAGE_ID --sequence 1 --tls --cafile ${PWD}/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/ca.crt
-
-peer lifecycle chaincode commit -o 127.0.0.1:6050 --channelID mychannel --name sample-contract --version 1 --sequence 1 --tls --cafile "${PWD}"/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/ca.crt
-
-peer chaincode query -C mychannel -n sample-contract -c '{"Args":["org.hyperledger.fabric:GetMetadata"]}'
 
 
 
@@ -216,7 +205,9 @@ export KUBECONFIG_PATH=$HOME/.kube/config
 
 ip addr show docker0 <- didn't work!
 
-docker network inspect kind
+docker exec kind-control-plane sh -c 'ip addr show eth0'
+
+docker network inspect kinds
 
 jq to extract Gateway?
 
@@ -247,3 +238,17 @@ peer lifecycle chaincode commit -o 127.0.0.1:6050 --channelID mychannel --name s
 peer chaincode query -C mychannel -n sample-contract -c '{"Args":["org.hyperledger.fabric:GetMetadata"]}'
 
 
+
+
+
+
+
+
+https://docs.docker.com/network/network-tutorial-standalone/
+
+https://gist.github.com/developer-guy/173347e71f92a61abbc017deb518b6cb
+
+
+kubectl run bash-shell --rm -i --tty --image ubuntu -- bash
+
+kubectl apply -f https://k8s.io/examples/application/shell-demo.yaml
